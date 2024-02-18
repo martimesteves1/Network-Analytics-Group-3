@@ -1,7 +1,5 @@
-```{r   }
-setwd("C:/Users/marti/OneDrive - Nova SBE/Nova/Master's in Business Analytics/Disciplinas/2nd Semester/t1/Network Analytics/Group Work/Assignment 2")
-rm(list=ls(all=TRUE))
-```
+
+
 # INSTRUCTIONS
 
 -   This is a group assignment.
