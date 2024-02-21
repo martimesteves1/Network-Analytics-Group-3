@@ -1,4 +1,4 @@
-# test
+
 
 # INSTRUCTIONS
 
@@ -80,8 +80,14 @@ all the code you created/used in your answer.
     `[1 point]`
 
 ```{r}
-# <answer here>
-
+# According to the code in the "Load and prepare the data" section, an unique
+# movie is defined by the unique combination of the values in columns movie and 
+# year, so the same rationale wil be applied.
+dt.movie.unique <- unique(dt.movie.actor, by = c("movie", "year"))
+print(dt.movie.unique[, .N])
+#OR
+dt.movie.unique <- dt.movie.actor[, .N, by = list(movie, year)]
+print(nrow(dt.movie.unique))
 ```
 
 
@@ -89,21 +95,26 @@ all the code you created/used in your answer.
     the actors from the movie `"Se7en (1995)"`. `[1 point]`
 
 ```{r}
-# <answer here>
+l.actor.fight.club <- dt.movie.actor[movie == "Fight Club (1999)", actor]
+print(l.actor.fight.club)
+l.actor.se7en <- dt.movie.actor[movie == "Se7en (1995)", actor]
+print(l.actor.se7en)
 ```
 
 3.  Which actors participated on both movies? Hint: The function
     `intersect` calculates the intersection of two sets. `[1 point]`
 
 ```{r}
-# <answer here>
+print(intersect(l.actor.fight.club, l.actor.se7en))
 ```
 
 4.  In which movies did Brad Pitt (b.1963) and George Clooney (b.1961) star together?
     `[1 point]`
 
 ```{r}
-# <answer here>
+l.movie.brad.pitt <- dt.movie.actor[actor == "Brad Pitt (b.1963)", movie]
+l.movie.george.clooney <- dt.movie.actor[actor == "George Clooney (b.1961)", movie]
+print(intersect(l.movie.brad.pitt, l.movie.george.clooney))
 ```
 
 5.  Create a table that shows the number of movies released per year.
@@ -116,7 +127,11 @@ all the code you created/used in your answer.
     in question 1. `[1 point]`
 
 ```{r}
-# <answer here>
+dt.movie.year <- dt.movie.unique[order(year), .(n_movies = .N), by = year]
+dt.movie.year[, csum_n_movies := cumsum(n_movies)]
+# use tail() to check if the cumsum in last row is equal to total
+print(dt.movie.year)
+print(dt.movie.year[.N, csum_n_movies])
 ```
 
 6.  Which actor/actress has starred in the most movies across all data?
@@ -126,7 +141,7 @@ all the code you created/used in your answer.
     `[1 point]`
 
 ```{r}
-# <answer here>
+
 ```
 
 7.  Consider only the 10% most popular movies (by votes) in the decade 2010-2019.
