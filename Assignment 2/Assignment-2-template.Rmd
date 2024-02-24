@@ -82,7 +82,7 @@ all the code you created/used in your answer.
 ```{r}
 # According to the code in the "Load and prepare the data" section, an unique
 # movie is defined by the unique combination of the values in columns movie and 
-# year, so the same rationale wil be applied.
+# year, so the same rationale will be applied.
 dt.movie.unique <- unique(dt.movie.actor, by = c("movie", "year"))
 print(dt.movie.unique[, .N])
 #OR
@@ -153,7 +153,7 @@ print(dt.year.most.actor.2000[, year])
 print(dt.year.most.actor.2000[, actor])
 
 l.movie.actor.all <- dt.movie.actor[actor == actor.most.movies.all, movie]
-l.movie.actor.2000 <- dt.movie.actor[actor == year.most.actor.2000[, actor], movie]
+l.movie.actor.2000 <- dt.movie.actor[actor == dt.year.most.actor.2000[, actor], movie]
 print(intersect(l.movie.actor.all, l.movie.actor.2000))
 ```
 
@@ -169,13 +169,13 @@ print(intersect(l.movie.actor.all, l.movie.actor.2000))
 dt.movie.2010.2019 <- dt.movie.actor[year>=2010 & year<=2019, .(votes = votes[1]),
                                      by = movie]
 votes.quantile.90 <- quantile(dt.movie.2010.2019[, votes], 0.9, na.rm = TRUE)
-dt.movie.2010.2019.popular <- dt.movie.2010.2019[votes >= votes.quantile.90, movie]
+dt.movie.2010.2019.popular <- dt.movie.2010.2019[votes >= votes.quantile.90, ]
 
 dt.movie.actor.filtered <- dt.movie.actor[movie %in% dt.movie.2010.2019.popular, ]
 dt.movie.actor.filtered[, n_movies_decade := .N, by = actor]
-ls.top.10.actors <- unique(dt.movie.actor.filtered, 
+l.top.10.actors <- unique(dt.movie.actor.filtered, 
                            by = "actor")[order(-n_movies_decade)][1:10, actor]
-print(ls.top.10.actors)
+print(l.top.10.actors)
 
 dt.movie.actor.filtered[, n_movies_year := .N, by = list(year, actor)]
 year.most.actor.2000.2019 <- unique(dt.movie.actor.filtered[
@@ -189,7 +189,17 @@ print(year.most.actor.2000.2019)
     do you observe? Is there anything strange? `[1 point]`
 
 ```{r}
-# <answer here>
+ggplot(dt.movie.year, aes(x = n_movies)) + geom_histogram()
+
+# Most years have a value of n_movies (variable defined for the yearly movie 
+# count) in the 0 to 4000 movies range, with most frequent n_movies value being 
+# around 2000 movies, and with years having a greater amount of n_movies, up to 
+# 12000 movies. 
+# One thing that is strange is that there are 10 years with a n_movies value near
+# 0. This is likely related to older years in the data, where both the number of
+# movies released and the information about them would be scarcer than the average
+# year. By using the View() function, we can confirm that these low values belong
+# to years in the end of the XIX / beginning of the XX centuries.
 ```
 
 2.  Plot a histogram that represents the distribution of number of IMDb
@@ -198,7 +208,15 @@ print(year.most.actor.2000.2019)
     votes. Which patterns do you observe? `[1 point]`
 
 ```{r}
-# <answer here>
+ggplot(dt.movie.unique, aes(x = votes)) + geom_histogram()
+
+# ggplot plot the histogram with a range on the x axis from 0 to around 2 million
+# votes, where most movies are on the lower end of the histogram, while very few
+# ones have extremely high number of votes. This can be a factor of old age and
+# lack of historical relevance of the movies, as a lot of old movies that are not
+# very famous have votes in the thousands or below. In a lot of cases, there aren't
+# even any votes, as observable in the warning message give by ggplot in the output,
+# where it is indicated that 153697 rows were removed from the plot because of NAs.
 ```
 
 3.  Plot a histogram that represents the distribution of the number of
@@ -207,7 +225,19 @@ print(year.most.actor.2000.2019)
     Describe your findings. `[1 point]`
 
 ```{r}
-# <answer here>
+ggplot(dt.movie.unique, aes(x = n_actors)) + geom_histogram()
+
+# From the histogram, we can observe that the most frequent value is 4, and that
+# most values are concentrated between 0 and 10. There is a very high imbalance 
+# between the frequency of the value 4 and the others, with 4 having a count higher
+# than 200,000, while the second most popular value, 5, reaches just over 25000.
+# Also, ggplot plots over a range in the x-axis from 0 to just over 25, meaning
+# that there are a few movies that have a number of actors in the data way higher
+# than the most frequent and average values. It is important to note, however,
+# that the n_actors number is not necessarily the total number of actors in the
+# movie, but instead is the number of times an entry for an actor starring in that
+# movie is recorded in the data set. So normally, we can expect older and/or less
+# relevant movies to have incomplete information about the actors starred in them.
 ```
 
 ## Questions (`igraph`) `[10 points]`
@@ -220,7 +250,18 @@ print(year.most.actor.2000.2019)
     participations exist? `[1 point]`
     
 ```{r}
-# <answer here>
+
+dt.movies.2010.2019 <- dt.movie.actor[year>=2010 & year<=2019]
+top.movies <- dt.movies.2010.2019[, .N ,by=list(movie,votes)][order(-votes)][1:50, movie]
+actors.in <- dt.movies.2010.2019[movie %in% top.movies]
+all.actors <- actors.in[, list(name=unique(actor), type=TRUE)]
+all.movies <- actors.in[, list(name=unique(movie), type=FALSE)]
+all.vertices <- rbind(all.actors, all.movies)
+library(igraph)
+g <- graph_from_data_frame(actors.in[, list(movie, actor)], directed=FALSE, vertices=all.vertices)
+plot(g, layout = layout_as_bipartite, vertex.size = 5, vertex.label=NA)
+num_edges <- ecount(g)
+print(num_edges)
 ```
 
 
@@ -237,6 +278,22 @@ print(year.most.actor.2000.2019)
 
 ```{r}
 # <answer here>
+
+g.movies <- bipartite.projection(g)$proj1
+degree_centrality <- degree(g.movies)
+isolates <- which(degree_centrality == 0)
+g.movies <- delete_vertices(g.movies, isolates)
+plot(g.movies, vertex.label = NA)
+
+centrality_data <- data.table(
+  Node = V(g.movies)$name,
+  Degree = degree(g.movies),
+  Closeness = round(closeness(g.movies), 2),
+  Betweenness = betweenness(g.movies),
+  Eigenvector = round(eigen_centrality(g.movies)$vector, 2)
+)
+print(centrality_data)
+
 ```
 
 3.  For each centrality measure, list the top 20 movies with highest
@@ -244,6 +301,15 @@ print(year.most.actor.2000.2019)
 
 ```{r}
 # <answer here>
+top_closeness <- centrality_data[order(-Closeness), .(Node, Closeness)][1:20]
+top_degree <- centrality_data[order(-Degree), .(Node, Degree)][1:20]
+top_betweenness <- centrality_data[order(-Betweenness), .(Node, Betweenness)][1:20]
+top_eigenvector <- centrality_data[order(-Eigenvector), .(Node, Eigenvector)][1:20]
+
+print(top_closeness)
+print(top_degree)
+print(top_betweenness)
+print(top_eigenvector)
 ```
 
 4.  Calculate the average clustering coefficient for the movies
@@ -251,6 +317,11 @@ print(year.most.actor.2000.2019)
 
 ```{r}
 # <answer here>
+local.cluster <- transitivity(g.movies, type="local")
+average.cluster <- transitivity(g.movies, type="average")
+
+print(local.cluster)
+print(average.cluster)
 ```
 
 5.  Choose one movie you like and plot the movie, their direct
@@ -261,13 +332,32 @@ print(year.most.actor.2000.2019)
 
 ```{r}
 # <answer here>
+movie_target <- "Avengers: Endgame (2019)"
+neighbors <- neighbors(g.movies, movie_target)
+vertex_indices <- c(which(V(g.movies)$name == movie_target), neighbors)
+subgraph <- induced_subgraph(g.movies, vertex_indices)
+plot(subgraph)
+
+
+clusteringCoefficient <- transitivity(subgraph, type = "local")
+print(clusteringCoefficient)
+
+
+subset_movies <- names(neighbors)
+a <- actors.in[movie %in% subset_movies, ]
+actors.target <- actors.in[movie %in% "Avengers: Endgame (2019)", ]
+unique_movies <- a[!(a$actor %in% actors.target$actor)]
+top.actor <- unique_movies[,n := .N,by = actor][order(-n)][1]
+top.actor[,list(actor,n)]
+
 ```
 
-6.  Plot the degree distribution of the movies. How do you compare them
+6.  How do you compare them
     with the degree distribution of a random graph? What can be
     plausible explanations for the observed differences? `[2 points]`
 
 
 ```{r}
 # <answer here>
+ggplot() + geom_histogram(aes(x = degree(g.movies)), binwidth = 1)
 ```
