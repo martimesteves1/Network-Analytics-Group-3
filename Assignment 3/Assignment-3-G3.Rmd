@@ -1,0 +1,1134 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+# INSTRUCTIONS
+
+-   This is a group assignment.
+-   Submit your answer digitally as two files through Moodle:
+    -   An R markdown file (extension **Rmd**). Use the template provided
+        to you and provide your answers (both code and text) below each
+        question.
+    -   An **HTML** file &ldquo;knitted&rdquo; by RStudio including all the results and
+        plots. More details on how to create these files were provided
+        in class on week 3.
+-   Follow the Style Guide (available on Moodle). You can be
+    penalized on up to 20% in each question for which you do not follow
+    the Style Guide.
+-   Questions regarding the assignment should be posted <span class="underline">exclusively</span> on
+    the respective discussion forum on Moodle.
+
+
+## <span class="underline">Deadline:</span> Monday, March 10 at 23:59.
+
+-   Late submissions are <span class="underline">not allowed</span>
+
+<span class="underline">**Warning:**</span> The detection of <span class="underline">any form of plagiarism</span> in your work
+means the assignment will be graded with <span class="underline">ZERO points</span>.
+
+\newpage
+
+
+# Dating Platforms
+
+Online dating platforms enable people to find new connections with the
+goal of developing personal, romantic, or sexual relationships. In
+some platforms individuals express their interest in others in
+multiple ways, including by &ldquo;liking&rdquo; them. &ldquo;Liking&rdquo; someone is an
+indication of interest that, in most platforms, is revealed to both
+individuals only if the &ldquo;liking&rdquo; is mutual, i.e., if the target
+individual also stated interest. In such cases we say there is a
+match.
+
+For this assignment we are going to analyze &ldquo;likes&rdquo; issued by members
+in an online dating platform using tools learned in class. Answer each
+of the questions below the best you can. In case you find any
+ambiguity in the question, assume the most sensible option in you
+opinion, state your assumptions and proceed. In most cases ambiguity
+is by design.
+
+
+## Data Description
+
+The file `nda-dating-likes.RData` contains two `data.table`, each of
+them is described below.
+
+
+### `dt.users`
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Field</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td class="org-left"><code>user_id</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">user identification</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>inviter_id</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">id of the user that invited this user to the platform</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>gender</code></td>
+<td class="org-left">string</td>
+<td class="org-left">gender</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>birth_year</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">year of birth</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>education</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">education</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>approved_week</code></td>
+<td class="org-left">date</td>
+<td class="org-left">week in which this user was approved to the platform</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>height</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">height (in cm)</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>children</code></td>
+<td class="org-left">boolean</td>
+<td class="org-left">whether the user has children</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>smoker</code></td>
+<td class="org-left">boolean</td>
+<td class="org-left">whether the user smokes</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>n_fb_friends</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">how many Facebook friends does the user have</td>
+</tr>
+</tbody>
+</table>
+
+
+### `dt.likes`
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Field</th>
+<th scope="col" class="org-left">Type</th>
+<th scope="col" class="org-left">Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td class="org-left"><code>sender_user_id</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">user identification of the sender of the like</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>receiver_user_id</code></td>
+<td class="org-left">integer</td>
+<td class="org-left">user identification of the receiver of the like</td>
+</tr>
+
+
+<tr>
+<td class="org-left"><code>week</code></td>
+<td class="org-left">date</td>
+<td class="org-left">week in which the like was issued</td>
+</tr>
+</tbody>
+</table>
+
+\newpage 
+
+
+## Setup and data loading
+
+Start by loading the required libraries and loading the likes data
+
+```{r   }
+library(data.table)
+library(ggplot2)
+library(igraph)
+library(patchwork)
+
+load("nda-dating-likes.RData") 
+```
+
+
+## Questions
+
+
+### Invites Network `[10 points]`
+
+This section contains questions related to the invites network.
+
+1.  *(Easy)* Build a directed graph representing the invites network: an
+    individual A is connected to individual B if A invited B to the
+    platform. What is the size of the longest chain? What is the
+    clustering coefficient of this network? Justify. `[3 points]`
+    
+```{r}
+# Plot all data point as a directed network
+v.edges <- dt.users[, c("inviter_id", "user_id")]
+#We are getting one node called NA, that is the people who were not invited
+graph <- graph_from_data_frame(d = v.edges, directed = TRUE)
+#Find the index of the node NA
+na.node.index <- which(V(graph)$name == "NA")
+#Delete NA from the graph
+subgraph <- induced_subgraph(graph, -na.node.index)
+plot(subgraph, vertex.label=NA, edge.arrow.size=0.3, vertex.size=4)
+
+
+# As the visualization is very dense, it is difficult to understand the 
+# connections between users, so we decided to plot a directed graph with only
+# the users that are connected to others by an invitation.
+# In other words, we eliminated the nodes that did not invite or were not 
+# invited by someone else.
+
+
+#Plot the new directed graph without users that were not invited by others
+dt.users.cleaned <- as.data.frame(dt.users[, c( "inviter_id", "user_id")])
+dt.users.cleaned <- dt.users.cleaned[complete.cases(dt.users.cleaned), ]
+invites.graph <- graph_from_data_frame(dt.users.cleaned, directed = TRUE)
+plot(invites.graph, vertex.label = NA, vertex.size = 4, edge.arrow.size = 0.3)
+
+
+
+#Size of the longest chain
+size.longest.chain <- diameter(subgraph)
+cat("The size of the longest chain is calculated by the diameter and is", 
+    size.longest.chain,".", "\n")
+
+
+#Clustering Coefficient Calculation
+clustering.coefficient.global <- transitivity(subgraph, type = "global")
+clustering.coefficient.average <- transitivity(subgraph, type = "average")
+cat("The global clustering coefficient of this network is", 
+    clustering.coefficient.global, ".\n")
+cat("The average clustering coefficient of this network is", 
+    clustering.coefficient.average, ".")
+```
+
+
+##### SIZE OF THE LONGEST CHAIN
+The size of the longest chain is 9 meaning that the longest directed path 
+between any two nodes in the graph consists of 9 edges. So, in a plot with these
+much edges, it can mean that the network is not of extreme density and sparsity.
+This means that most of the people using the platform do not tend to invite 
+new users.
+
+##### CLUSTERING COEFFICIENT
+The average clustering coefficient of a network is the degree to which its 
+neighbors are linked among themselves, calculated by the average of the 
+clustering  coefficient of all nodes in a graph. 
+In this case, the average clustering coefficient is 0, meaning that the nodes of
+this network do not form clusters with their neighbors.
+This result was expected as we are looking at a directed graph, were each node 
+can be invited only 1 time. This means that, for instance, person A can invite
+person B and person C, creating an edge between A and B and A and C. 
+However, it is impossible to have an edge between person B and C because each 
+person can  only be invited once although a user can invite several others. 
+So, all nodes in the graph will have a clustering coefficient of 0.
+
+
+
+2.  *(Easy, once you get what you need to do)* Goel, Watts and Goldstein,
+    in their paper entitled &ldquo;The structure of online diffusion
+    networks&rdquo;, state that long cascades in diffusion networks happen
+    very rarely in online networks. Do you think is also the case with
+    the invites network in this online dating platform? Perform the
+    analyses you deem necessary to answer this question with reasonable
+    confidence. `[3 points]`
+    
+```{r}
+# Find the connected components in a graph
+l.connected.components <- components(subgraph)
+
+# Calculate diameter for each connection
+v.component.diameters <- c()
+for (i in 1:length(l.connected.components$csize)) {
+    component <- induced_subgraph(subgraph, 
+                                  which(l.connected.components$membership == i))
+    v.component.diameter <- diameter(component)
+    v.component.diameters <- c(v.component.diameters, v.component.diameter)
+}
+
+dt.value.counts <- table(v.component.diameters)
+dt.value.counts
+cat("\n")
+
+barplot(dt.value.counts, main = "Distribution of Cascades' diameter", 
+        xlab = "Diameter", ylab = "Frequency", 
+        col = "blue")
+
+# Calculate the number of nodes in each connection
+dt.component.size.counts <- table(l.connected.components$csize)
+cat("component.size.counts")
+dt.component.size.counts
+```
+
+
+Our interpretation of a cascade is each independent component that form the 
+whole network. This is, starting in a node that entered on the platform without 
+an invitation and ending in a node that did not invite anyone. 
+
+To analyse the frequency of long cascades in a diffusion network, in this case
+in the invited network, we calculated the diameter and size of all cascades. 
+
+The diameter is the the shortest longest path of a cascade and, as we can see
+in this network, there were 11070 cascades (91% of all cascades) with a diameter
+of 0 meaning that they were not invited not invited anyone. Moreover, 828 users 
+joined the platform through an invitation and did not invite anyone else (7% of
+all cascades).
+
+We consider a long cascade when the diameter is above or equal to 5. This only
+represents 9 cascades in total (5+2+1+1), which represents 0,07% (9/12110) of
+the cascades present in this network. 
+
+Furthermore, we decided to calculate the size of each cascade to see the density
+and strength of each. With this, we discovered that there were 677 cascades that 
+have 2 nodes. Also, 80% of the nodes of this network are in a component of until
+5 nodes. 
+
+
+So, to answer the question: Do you think is also the case with the invites 
+network in this online dating platform?
+Based on our analysis, we conclude that this is the case with the online dating 
+platform once the longest cascade has a diameter of 9 in a network of 15060 
+nodes.
+
+  
+3.  *(Moderate)* Do you think the invites network exhibits homophily?
+    In other words, do you think men are more likely to invite other
+    men and women more likely to invite other women? What about in
+    terms of age? Do members tend to invite members of a similar age?
+    Please describe your overall approach to answering these questions
+    and justify and explain each step of your answer. `[1 point]`
+    
+```{r}
+
+# Absolute count of invitations by gender
+dt.users$inviter.gender <- dt.users$gender[match(dt.users$inviter_id, 
+                                                 dt.users$user_id)]
+men.inviting.men <- sum(dt.users$gender == 'Male' & 
+                          dt.users$inviter.gender == 'Male', na.rm = TRUE)
+females.inviting.females <- sum(dt.users$gender == 'Female' & 
+                                  dt.users$inviter.gender == 'Female', 
+                                na.rm = TRUE)
+men.inviting.female <- sum(dt.users$gender == 'Female' & 
+                             dt.users$inviter.gender == 'Male', na.rm = TRUE)
+female.inviting.men <- sum(dt.users$gender == 'Male' & 
+                             dt.users$inviter.gender == 'Female', na.rm = TRUE)
+
+cat("There are", men.inviting.men, "men inviting men and", 
+    men.inviting.female, "men inviting female . \n"  )
+cat("There are", female.inviting.men, "female inviting men and",
+    females.inviting.females, "women inviting women \n"  )
+
+# Relative count of invitations by gender
+dt.invited.users <- dt.users[!is.na(dt.users$inviter_id), ]
+total.invitations <- nrow(dt.invited.users)
+percentage.females.inviting.females <- (females.inviting.females / 
+                                          total.invitations)*100
+percentage.men.inviting.men <- (men.inviting.men / total.invitations)*100
+percentage.female.inviting.men <- (female.inviting.men / total.invitations)*100
+percentage.men.inviting.female <- (men.inviting.female / total.invitations)*100
+
+cat("From all invitations, ", percentage.females.inviting.females,"% were from",
+    "women inviting women and", percentage.men.inviting.men, "% were from men",
+    "inviting men. \n")
+cat("From all invitations,", percentage.female.inviting.men,"% were from women",
+    "inviting men and ", percentage.men.inviting.female, "% were from men", 
+    "inviting women. \n")
+
+# Plot histogram with invitation distribution by gender
+percentage.men.invite.men <- (men.inviting.men) / (men.inviting.female + 
+                                                     men.inviting.men)*100
+percentage.female.invite.female <- (females.inviting.females) / 
+  (females.inviting.females + female.inviting.men)*100
+percentage.female.invite.men <- (female.inviting.men) / 
+  (females.inviting.females + female.inviting.men)*100
+percentage.men.invite.female <- (men.inviting.female) / (men.inviting.female + 
+                                                           men.inviting.men)*100
+
+df.males.data <- data.frame(
+  category = c("Males Inviting Females", "Males Inviting Males"),
+  percentage = c(percentage.men.invite.female, percentage.men.invite.men))
+
+df.females.data <- data.frame(
+  category = c("Females Inviting Females", "Females Inviting Males"),
+  percentage = c(percentage.female.invite.female, percentage.female.invite.men))
+
+
+# Plot pie chart for males
+ggplot(df.males.data, aes(x = "", y = percentage, fill = category)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y") +
+  theme_void() +
+  ggtitle("Males Inviting") +
+  geom_text(aes(label = paste0(round(percentage), "%")), position = 
+              position_stack(vjust = 0.5))
+
+# Plot pie chart for females
+ggplot(df.females.data, aes(x = "", y = percentage, fill = category)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y") +
+  theme_void() +
+  ggtitle("Females Inviting") +
+  geom_text(aes(label = paste0(round(percentage), "%")), position = 
+              position_stack(vjust = 0.5))
+
+# Delete outliers (user.id = 1994 has birth.year = 2078)
+dt.users <- dt.users[user_id != 1994, ]
+
+# Invitations by exactly the same age
+dt.users$inviter_birth_year <- dt.users$birth_year[match(dt.users$inviter_id, 
+                                                         dt.users$user_id)]
+same.age.invitations <- sum(dt.users$inviter_birth_year == dt.users$birth_year, 
+                            na.rm = TRUE)
+percentage.same.age.invitations <- (same.age.invitations/total.invitations)*100
+
+cat(same.age.invitations, "users were exactly the same age, which corresponds", 
+"to", percentage.same.age.invitations, "% .\n")
+
+# Average age difference between users and inviters
+dt.users$age_difference <- abs(dt.users$birth_year - dt.users$inviter_birth_year)
+dt.age.difference.data <- dt.users[!is.na(dt.users$age_difference), ]
+average.age.difference <- mean(dt.age.difference.data$age_difference)
+
+cat("From those who were invited, on average, they got invited by someone of", 
+    "around", round(average.age.difference), "years difference. \n")
+
+# Age bins of 4 years difference
+age.bins <- seq(0, max(dt.users$age_difference, na.rm = TRUE) + 1, by = 4)
+dt.users$age_group <- cut(dt.users$age_difference, breaks = age.bins, 
+                          labels = FALSE, include.lowest = TRUE)
+dt.age.difference.data <- dt.users[!is.na(dt.users$inviter_birth_year), ]
+invitation.counts <- table(dt.age.difference.data$age_group)
+
+cat("We get that there were 1915 invitations between people with an age", 
+    "difference of between 0 and 4 years, 641 invitations between people with",
+    "an age difference of between 4 and 8 years, and so on. \n")
+invitation.counts
+```
+
+
+Homopholy is the tendency of nodes to connect with similar nodes in a network.
+This can be as "opportunity based" if there is only the opportunity for that 
+or as "choice based" if there is the possibility of other different connections
+but still people choose to connect to those who share the same characteristics.
+In this case, dating platforms are "choice based" as people can connect with 
+others that show a variety of different features.
+
+
+Q: Do you think men are more likely to invite other men and women more likely to
+invite other women?
+A: We can see than there are more women inviting women in this data set 
+(1263 compared to 851) which correspond to 42.9% and 28.8%, respectively.
+Furthermore, there are 527 female inviting men and 309 men inviting female, 
+which corresponds to 17.9% and 10.5%, respectively. 
+In general, and analyzing the pie chart, it is easy to understand that the 71%
+of users invited by females are also females and, 73% of users that males 
+invite are males.
+So, we can conclude that men are more likely to invite other men and women more 
+likely to invite other women, which exhibits homophily.
+
+Q: Do members tend to invite members of a similar age?
+A: Only 14.85% of the invitations were between users of exactly the same
+age. To perform a deeper and more insightful analysis, we calculated the mean
+age difference between users and inviters to find that the difference in age
+between them is of 4 years. So, we decided then to create age bins of width 4
+and count how many users where invited by someone of that age range.
+With this, we concluded that there were 1915 users invited by someone with 0 to
+4 years difference, 641 users invited by someone of 4 to 8 yeas difference, 268 
+users invited by someone of 8 to 12 years difference, and so on.
+There are 5 users invited by someone of 28 to 32 years difference, corresponding
+to the highest difference in age.
+So, we can conclude that people of similar age are more likely to invite people
+of similar age, once only a minority has a higher age difference. 
+
+
+Concluding, the invites network exhibits homopholy as, although people have the 
+possibility to invite people of other gender and ages, most of them will still 
+invite those with similar characteristics.
+
+
+4.  *(Make up question: You can skip any of the previous questions and
+    answer this question instead.)* Describe and perform any additional
+    analysis you want **using the invites network**. You will be graded
+    by the creativity and correctness of the analysis, but also as a
+    comparison to the best answers provided by other students. The best
+    answers will have full points, while the other answers will be
+    judged by comparison with the best answers. `[3 points]`
+    
+```{r}
+
+# Calculate the % of information given for each characteristic, by year
+dt.users$approved_week <- as.Date(dt.users$approved_week)
+dt.users$year <- as.integer(format(dt.users$approved_week, "%Y"))
+dt.users$month <- as.integer(format(dt.users$approved_week, "%m"))
+
+df.diffusion.summary <- data.frame(year = integer(),
+                                characteristic = character(),
+                                adoption.rate = numeric(),
+                                stringsAsFactors = FALSE)
+
+characteristics <- c('education', 'smoker', 'children', 'height', 'gender', 
+                     'birth_year', 'n_fb_friends')  
+
+for (char in characteristics) {
+  for (yr in sort(unique(dt.users$year[complete.cases(dt.users$year)]))) {
+    data.year <- dt.users[dt.users$year == yr, ]
+    data.year[[char]] <- as.integer(data.year[[char]])
+    adoption.rate <- sum(!is.na(data.year[[char]])) / nrow(data.year)
+    df.diffusion.summary <- rbind(df.diffusion.summary, 
+                               data.frame(year = yr, characteristic = char, 
+                                          adoption.rate = adoption.rate))
+  }
+}
+print(df.diffusion.summary)
+
+# We can see that in 2016 and 2017 there was a abrupt drop in the total 
+# characteristics provided by the new users. So, let's analyse these years.
+
+# From those who entered in 2016 and 2017, if they were invited by someone else,
+# did the inviter also provide all the information? Or not?
+
+# So, we decided to analyse if these users were invited to the platform and if 
+# so, if the inviter provided all information. Moreover, we also compared if the 
+# user provided more or less than the invitee,
+
+dt.users$invitation_status <- ifelse(dt.users$inviter_id != 0, "Invited", 
+                                     "Not Invited")
+dt.year.2016.2017 <- dt.users[dt.users$year == 2016 | dt.users$year == 2017,]
+dt.merged.data <- merge(dt.year.2016.2017, dt.users, by.x = "inviter_id", 
+                     by.y = "user_id", suffixes = c("_invitee", "_inviter"))
+dt.merged.data$inviter_provided_all_info <- complete.cases(dt.merged.data[, 
+                  c("gender_inviter", "education_inviter", "smoker_inviter")])
+
+dt.merged.data$num_characteristics_invitee <- rowSums(!is.na(dt.merged.data[, 
+                  c("gender_invitee", "education_invitee", "smoker_invitee")]))
+dt.merged.data$num_characteristics_inviter <- rowSums(!is.na(dt.merged.data[, 
+                  c("gender_inviter", "education_inviter", "smoker_inviter")]))
+
+dt.merged.data$characteristics_comparison <- 
+  ifelse(dt.merged.data$num_characteristics_invitee > 
+           dt.merged.data$num_characteristics_inviter,"More than Inviter", 
+                                              "Less than or Equal to Inviter")
+
+dt.merged.data$percentage_characteristics_given <- 
+  (dt.merged.data$num_characteristics_invitee / 
+     dt.merged.data$num_characteristics_inviter) * 100
+dt.merged.data
+
+# Print the results
+cat("There were", table(dt.users$invitation_status), "users invited to the",
+"platform between 2016 and 2017. \n")
+
+cat("Of those, ", table(dt.merged.data$inviter_provided_all_info)[["FALSE"]], 
+    "had an inviter who did not provid all info and ", 
+    table(dt.merged.data$inviter_provided_all_info)[["TRUE"]], 
+    "has an inviter who provided all info.\n")
+
+cat("So, ", table(dt.merged.data$characteristics_comparison)
+    [["Less than or Equal to Inviter"]], 
+    "provided less than or equal information than the inviter and only", 
+    table(dt.merged.data$characteristics_comparison)[["More than Inviter"]], 
+    "provided more information than the inviter.\n")
+
+# To better understand these values, we created a dataframe to store the results
+df.results <- data.frame(
+  User_ID = dt.merged.data$user_id,
+  Invitation_Status = dt.users$invitation_status[match(dt.merged.data$user_id, 
+                                                       dt.users$user_id)],
+  Inviter_Provided_All_Info = dt.merged.data$inviter_provided_all_info,
+  Num_Characteristics_Invitee = dt.merged.data$num_characteristics_invitee,
+  Num_Characteristics_Inviter = dt.merged.data$num_characteristics_inviter,
+  Characteristics_Comparison = dt.merged.data$characteristics_comparison,
+  Percentage_Characteristics_Given = dt.merged.data$percentage_characteristics_given
+)
+
+# Lastly, to better visualize our findings, we plotted the data
+par(mfrow=c(1, 2))
+
+# Pie chart for Inviter Provided All Information
+pie(table(df.results$Inviter_Provided_All_Info), 
+    main="Inviter Provided All Information", col=c("skyblue", "lightcoral"))
+
+# Bar plot for Characteristics Comparison
+barplot(table(df.results$Characteristics_Comparison), 
+        main="Characteristics Comparison", xlab="Comparison", ylab="Count", 
+        col=c("skyblue", "lightcoral"))
+
+par(mfrow=c(1, 1))
+
+cat("Now, it is easy to understand that there were more than half of the",
+"inviters of those that entered the platform in 2016 and 2017 did provide all",
+"information. However, the invitee provided less than or equal information",
+"compared to the inviter. So,it is safe to say that dating platforms have been",
+"facing a decreasing trend in the information users have been providing over",
+"the years.")
+```
+
+
+Q: Study the abstinence of characteristics input in the platform. What insights 
+   can you take from there?
+A: To answer this question, we decided to calculate the percentage of input 
+characteristics for each year and for each characteristic the platform provides.
+By this, we could conclude that the adoption rate decreased abruptly for every 
+characteristic in 2016 and 2017, meaning that users who joined the platform in 
+this period have missing information in their profile.
+Moreover, we decided to analyse what happened in 2016 and 2017, to be more 
+specific.
+After filtering the dataset to the desired dates, we computed if the inviters 
+have provided all information in their profiles. Of these, 938 inviters did not 
+provide all info and only 561 inviters did provide all info. This shows that 
+there might be a pattern as most i+of the inviters of the user that joined the 
+platform in 2016 and 2017 did not profile all their features. 
+Furthermore, we computed that 2950 users of those joining the platform in this 
+time period were invited by other users. Of these, 701 had an inviter who did 
+not provide all info and  798 has an inviter who provided all info.
+So,  1295 provided less than or equal information than the inviter and only 204 
+provided more information than the inviter.
+In conclusion, we can conclude that new users entering the platform in 2016 and 
+2017 did not provide all their information and that this trend shows also from 
+their inviters. This might be because their friends (who invited them) also did 
+not add all the information, influencing their friends to do the same.
+
+
+### Likes Network `[10 points]`
+
+This section contains questions related to the likes network.
+
+1.  *(Easy)* Build a directed graph representing the likes network: an
+    individual A is connected to individual B if A liked B. What is the
+    clustering coefficient of this network? Justify. `[2.5 points]`
+
+```{r}
+# Remove the instances where sender_user_id is equal to receiver_user_id 
+# (assumed to be faulty)
+dt.likes.clean <- dt.likes[!(sender_user_id == receiver_user_id), ]
+
+# Create a directed graph representing the likes network
+dt.likes.g <- dt.likes.clean[, list(sender_user_id, receiver_user_id)]
+g.likes.directed <- graph_from_data_frame(d = dt.likes.g, directed = TRUE)
+
+# Plot a sample (original graph is too big to plot)
+sample.nodes <- sample(V(g.likes.directed), 500)
+g.sample <- induced_subgraph(g.likes.directed, vids = sample.nodes)
+plot(g.sample, vertex.label = NA, vertex.size = 5, edge.arrow.size = 0.3)
+
+# Compute the clustering coefficient
+average.cluster.directed <- transitivity(g.likes.directed, type="average")
+print("Clustering Coefficient:")
+print(average.cluster.directed)
+
+# A: Clustering coefficient is 0.0004102289
+```
+
+The directed graph represents the likes network and it is made of individuals 
+connected by directed edges, where an edge from individual A to individual B 
+indicates that A liked B. 
+
+Before constructing this graph, we removed cases where the sender_user_id is 
+equal to the receiver_user_id. We assumed that these self-liking interactions
+were some kind of error in the dataset or a bug in the application. 
+
+We then created a directed graph using the `graph_from_data_frame` function, 
+using `directed = TRUE`. However due to the large size of the graph, we had
+problems plotting the entire network. So we created a sample of 500 nodes
+to have an idea of the structure of the network.
+
+Looking at the sample graph we observe that there are nodes connected in the 
+center of network forming clusters with lots of connections, but there is also a
+small portion of nodes disconnected from the center.
+
+Furthermore, we calculated he clustering coefficient of our graph. On a local
+scale, the clustering coefficient of a node measures how well connected its
+neighbors are (as the number of existing connections divided by the possible
+connections). On a global scale, the clustering coefficient will describe the
+networks topology, more specifically, the tendency of nodes to form clusters.
+In the likes network, the computed average clustering coefficient is 
+approximately 0.00041, a very low value. This low value suggests that, on 
+average, individuals who like others don't form highly interconnected clusters 
+with each others' liked individuals. 
+
+This finding reflects the nature of online dating, in which individual 
+preferences (including sexuality) and interests, which vary a lot between people 
+play a major role in the likes network. The observed structure reflects the 
+heterogeneous nature of online dating. In online dating platforms, besides the 
+wide range of user preferences and interests, geographic location can also 
+influence choices. These factors when coupled together can lead to a more
+decentralized network where connections are driven by individual choices.
+
+
+2.  *(Moderate)* How many individuals &ldquo;like&rdquo; individuals of the same
+    gender? Does this happen more between women or between men? `[2.5
+       points]`
+
+```{r}
+# Check if dt.users has duplicated user_id or missing gender
+print("Number of rows with duplicated user_id in dt.users:")
+print(sum(duplicated(dt.users$user_id)))
+print("Number of rows with missing gender in dt.users:")
+print(sum(is.na(dt.users$gender)))
+
+# Merge likes data table and gender data
+dt.merged <- merge(dt.likes.clean, dt.users[, list(user_id, gender)],
+                         by.x = "sender_user_id", by.y = "user_id")
+setnames(dt.merged, "gender", "sender_gender")
+dt.merged <- merge(dt.merged, dt.users[, list(user_id, gender)],
+                         by.x = "receiver_user_id", by.y = "user_id")
+setnames(dt.merged, "gender", "receiver_gender")
+
+# Subset for same gender likes
+dt.gender.same <- dt.merged[sender_gender == receiver_gender, ]
+
+# Remove duplicate senders and users that like themselves
+dt.gender.same.unique <- unique(dt.gender.same, by = "sender_user_id")
+
+# Compute the number of individuals that like the same gender
+t.gender.count.same <- table(dt.gender.same.unique$sender_gender)
+print("Total individuals that like the same gender:")
+lgb.count <- sum(t.gender.count.same)
+print(lgb.count)
+
+print("Number of individuals that like the same gender, by gender:")
+print(t.gender.count.same)
+
+# Check if all the users in dt.users are in dt.likes (before calc. proportions)
+print("Number of users in dt.users not in dt.likes:")
+number.users <- dt.users[!((dt.users$user_id %in% dt.likes$receiver_user_id) | 
+                          (dt.users$user_id %in% dt.likes$sender_user_id)), .N]
+print(number.users)
+
+# Compute proportions
+print("Proportion of individuals that like the same gender:")
+user.count <- dt.users[, .N]
+print(lgb.count / user.count)
+
+print("Proportion of individuals that like the same gender by gender:")
+t.gender.count.all <- table(dt.users$gender)
+t.gender.proportion.same <- t.gender.count.same / t.gender.count.all
+print(t.gender.proportion.same)
+# A: Male - 257 (3.8%); Female - 166 (2%); Total - 423 (2.81%)
+```
+
+Before discussing results, it is important to discuss an assumption made in our
+solution. We assumed that the number of individuals that like individuals of the
+same gender, are individuals who sent like to other individuals of their gender.
+This means that, for example, a man receives likes from another man, that man
+would not be counted. This assumption could be contested, as most dating 
+platforms would only allow other users of the same gender to see and like a 
+profile, if the individual would state same gender preference. But due to lack 
+of contextual information about the data source, we adopted this simpler 
+approach. This assumption more likely does not affect our final conclusions, as 
+only some rare cases are affected.
+
+Regarding the results, we found that a total of 423 individuals like individuals
+of the same gender. This constitutes approximately 2.81% of users. Breaking it
+down by gender, 166 out of the 423 individuals counted are females, while the
+remaining 257 are males. So, in absolute terms, there are 91 more males who like
+males than females who like females.
+
+It is important to put this number into context, by calculating it in proportion
+to the total number of males and females. After calculating the proportion, it
+was found that approximately 3.81% of males like other males, compared to 2% of
+females. Taking into account these proportions, we can make the following 
+conclusions:
+
+1. The number of individuals that like other individuals is low in the dataset.
+This is consistent with what we would expect in a dating platform. This low
+number of individuals also goes in line with the hypothesis we proposed in 
+question 1 to explain the low clustering coefficient in the likes network.
+
+2. Among the individuals that like the same gender, more individuals are male
+than female. In percentage of the total number of users of each gender, there
+are more males that like the same gender than females, indicating that liking
+the same gender is more common in males.
+
+
+3.  *(Easy)* Build an undirected graph representing the matches
+    network: an individual A is connected to individual B if A liked B
+    and B liked A. What is the clustering coefficient of this network?
+    Justify. Hint: the function `as.undirected` transforms a directed
+    graph into an undirected graph; it can transform only the mutually
+    directed edges in undirected edges. `[2.5 points]`
+
+```{r}
+# Transform the directed graph built in question 1 into an undirected graph
+g.likes.undirected <- as.undirected(g.likes.directed, mode = "mutual")
+vertices.filter <- V(g.likes.undirected)[degree(g.likes.undirected) != 0]
+g.matches <- induced_subgraph(g.likes.undirected, vids = vertices.filter)
+
+# Plot a sample (original graph is too big to plot)
+sample.nodes <- sample(V(g.matches), 500)
+g.sample <- induced_subgraph(g.matches, vids = sample.nodes)
+plot(g.sample, vertex.label = NA, vertex.size = 5, edge.arrow.size = 0.3)
+
+# Compute the clustering coefficient
+average.cluster.undirected <- transitivity(g.matches, type="average")
+print("Clustering Coefficient:")
+print(average.cluster.undirected)
+# A: Clustering coefficient is 0.0002786879
+```
+
+The matches network represents individuals who have mutually liked each other.
+We used the function as.undirected() to create the graph of matches. Here an 
+edge exists between two nodes if both individuals have liked each other's 
+profiles. 
+
+After filtering out isolated nodes (individuals who have no connections), we 
+obtained the matches network. We also opted to visualize a sample of 500 nodes 
+and their connections. This provided an overview of the network structure.
+
+In the matches network, the computed average clustering coefficient is 
+approximately 0.00028. This indicates a very low level of clustering in the 
+network.
+
+The low clustering coefficient suggests that, on average, individuals who
+reciprocate the likes between each other are not highly interconnected with the
+other person mutual connections. This could be due to the various factors cited 
+in the previous answer, such as the heterogeneity in preferences and interests.
+
+It is also worth noting that the clustering coefficient is lower than in the
+directed network. One explanation for this could be the fact that in the
+directed network, it would be possible for an heterosexual individual to like
+an homosexual individual of the other gender (or vice-versa). Of course, these
+two wouldn't match. Subsequently, the homosexual user would like other users,
+that could have a connection with the first user. This group of connections
+would not be present in the matches network, as it would remove any connection
+that is not reciprocated.
+
+
+4.  *(Moderate)* A recent research article gathered significant
+    attention for claiming that, contrary to decades of prior research,
+    most real life networks are not scale-free (i.e., the degree
+    distribution does no not follow a power law). Based on the Quanta
+    Magazine article (not on the original research paper) linked below,
+    how do you classify the network of matches? Does it resemble a
+    random network, a free-scale network, or a mixed network? Justify
+    your answer. `[2.5 points]`
+    
+    Article: <http://bit.ly/2BwobR1>
+
+```{r}
+# Store the number of Vertices and Edges of the matches graph in variables
+number.vertices <- vcount(g.matches)
+number.edges <- ecount(g.matches)
+
+# Build a random network
+g.random <- sample_gnm(number.vertices, number.edges)
+
+# Build the scale-free networks using preferential attachment
+# Define the m parameter as n edges / n vertices to get a comparable network
+m.pref <- median(degree(g.matches))
+g.sf.pa.p2 <- sample_pa(number.vertices, power = 1, m = m.pref, 
+                             directed = FALSE)
+g.sf.pa.p3 <- sample_pa(number.vertices, power = 3, m = m.pref, 
+                             directed = FALSE)
+
+# Build the scale-free networks using the fitness model
+g.sf.fit.p2 <- sample_fitness_pl(number.vertices, number.vertices,
+                                    exponent.in = -1, exponent.out = 2)
+g.sf.fit.p3 <- sample_fitness_pl(number.vertices, number.vertices,
+                                    exponent.in = -1, exponent.out = 3)
+
+# Build the pure networks with arbitrary number of vertices and edges
+g.type.random <- sample_gnp(10000, p = 0.1)
+g.type.sf.p2 <- sample_pa(10000, power = 2, m = 7)
+g.type.sf.p3 <- sample_pa(10000, power = 3, m = 7)
+
+# Function to bin and normalize the degree distribution (use a default 30 bins)
+bin.and.normalize <- function(network, network.name, number.of.bins = 30) {
+  degrees <- degree(network)
+  max.degree <- max(degrees)
+  log.breaks <- log10(seq(1, max.degree, length.out = number.of.bins))
+  bins <- c(0, 10^log.breaks)
+  binned.data <- hist(degrees, breaks = bins, plot = FALSE)
+
+  dt <- data.table(
+    degree = binned.data$mids,
+    count = binned.data$counts / sum(binned.data$counts),
+    network = network.name
+  )
+# Remove NaNs and infinite values
+dt <- dt[!is.nan(degree) & !is.nan(count) & degree > 0 & count > 0]
+
+  return(dt)
+}
+
+# Apply the function to the networks, and join all data tables
+
+dt.degree.match <- bin.and.normalize(g.matches, "Matches")
+dt.degree.random <- bin.and.normalize(g.random, "Random")
+dt.degree.pa.p2 <- bin.and.normalize(g.sf.pa.p2, "Scale-Free PA, Power 2")
+dt.degree.pa.p3 <- bin.and.normalize(g.sf.pa.p3, "Scale-Free PA, Power 3")
+dt.degree.fit.p2 <- bin.and.normalize(g.sf.fit.p2, "Scale-Free Fit, Power 2")
+dt.degree.fit.p3 <- bin.and.normalize(g.sf.fit.p3, "Scale-Free Fit, Power 3")
+dt.degree.type.random <- bin.and.normalize(g.type.random, "Random Type")
+dt.degree.type.sf.p2 <- bin.and.normalize(g.type.sf.p2, "Scale-Free Type, Power 2")
+dt.degree.type.sf.p3 <- bin.and.normalize(g.type.sf.p3, "Scale-Free Type, Power 3")
+dt.degree.all <- rbind(dt.degree.match, dt.degree.random, dt.degree.pa.p2, 
+                       dt.degree.pa.p3, dt.degree.fit.p2, dt.degree.fit.p3,
+                       dt.degree.type.random, dt.degree.type.sf.p2,
+                       dt.degree.type.sf.p3)
+
+# Plot the degree distribution for the matches network and comparable networks
+l.to.plot <- list("Matches", "Random", "Scale-Free PA, Power 2", 
+                  "Scale-Free PA, Power 3", "Scale-Free Fit, Power 2", 
+                  "Scale-Free Fit, Power 3", "Random Type",
+                  "Scale-Free Type, Power 2", "Scale-Free Type, Power 3")
+l.to.plot <- list("Matches", "Random", "Scale-Free PA, Power 2", 
+                  "Scale-Free PA, Power 3", "Scale-Free Fit, Power 2", 
+                  "Scale-Free Fit, Power 3")
+
+plot.1 <- ggplot(dt.degree.all[network %in% l.to.plot], aes(x = degree, 
+                                                            y = count, 
+                                                            color = network)) +
+  geom_line(linewidth = 1.5) +
+  theme_minimal() +
+  labs(title = "Degree Distribution Matches Normal Scale",
+       x = "Degree (normal scale)",
+       y = "Count (normal scale)",
+       color = "Network Type") +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
+
+plot.2 <- ggplot(dt.degree.all[network %in% l.to.plot], aes(x = degree, 
+                                                            y = count, 
+                                                            color = network)) +
+  geom_line(linewidth = 1.5) +
+  scale_x_log10() + scale_y_log10() +
+  theme_minimal() +
+  labs(title = "Degree Distribution Matches Log Scale",
+       x = "Degree (log scale)",
+       y = "Count (log scale)",
+       color = "Network Type") +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
+
+print((plot.1 | plot.2) + plot_layout(guides = "collect") & 
+        theme(legend.position = "bottom"))
+
+# Plot the degree distribution for the artificial networks
+l.to.plot <- list("Random Type", "Scale-Free Type, Power 2", 
+                  "Scale-Free Type, Power 3")
+
+ggplot(dt.degree.all[network %in% l.to.plot], aes(x = degree, y = count, 
+                                                  color = network)) +
+  geom_line(linewidth = 1.5) +
+  scale_x_log10() + scale_y_log10() +
+  theme_minimal() +
+  labs(title = "Degree Distribution Types Log Scale",
+       x = "Degree (log scale)",
+       y = "Count (log scale)",
+       color = "Network Type") +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
+
+# More in depth plots for the matches, scale-free pa power 2 and random networks
+par(mfrow=c(1,2),  mar=c(5, 4, 4, 2) + 0.1)
+plot(density(degree(g.matches)), xlab = "k", ylab = "P(k)", 
+     main = "Matches Graph", type = "n")
+lines(density(degree(g.matches)), col = "blue", lwd = 2)
+plot(density(log(degree(g.matches))), xlab = "log(k)", ylab = "P(k)", 
+     main = "Matches Graph Log Scaled", type = "n")
+lines(density(log(degree(g.matches))), col = "blue",lwd = 2)
+
+par(mfrow=c(1,2),  mar=c(5, 4, 4, 2) + 0.1)
+plot(density(degree(g.random)), xlab = "k", ylab = "P(k)", 
+     main = "Random Graph", type = "n")
+lines(density(degree(g.random)), col = "blue", lwd = 2)
+plot(density(log(degree(g.random))), xlab = "log(k)", ylab = "P(k)",
+     main = "Random Graph Log Scaled", type = "n")
+lines(density(log(degree(g.random))), col = "blue",lwd = 2)
+
+par(mfrow=c(1,2),  mar=c(5, 4, 4, 2) + 0.1)
+plot(density(degree(g.sf.pa.p2)), xlab = "k", ylab = "P(k)",
+     main = "Scale-Free Graph", type = "n")
+lines(density(degree(g.sf.pa.p2)), col = "blue", lwd = 2)
+plot(density(log(degree(g.sf.pa.p2))), xlab = "log(k)", ylab = "P(k)",
+     main = "Scale-Free Graph Log Scaled", type = "n")
+lines(density(log(degree(g.sf.pa.p2))), col = "blue",lwd = 2)
+```
+
+
+Regarding the methods used to build the networks:
+
+  - To build the random distribution, the function `sample_gnm`, which is
+    equivalent to the `sample_gnp` function seen in class, but saves us the 
+    trouble of calculating the p parameter. Using any of this functions is 
+    equivalent to using the `erdos.renyi.game` function (an older version of the
+    previous two functions), as all resulting distributions are built according 
+    to the Erdős-Rényi model.
+    
+  - To build the scale free distribution, we tested two underlying mechanisms to
+    build them. Baranási originally proposed that the preferential attachment
+    mechanism was the underlying reason for the prevalence of scale-free 
+    networks, which was criticized because there are many more mechanisms that 
+    form scale-free networks. So, for our tests we will use preferential 
+    attachment, using the `sample_pa` function (equivalent to the deprecated 
+    `barabasi.game`) that implements the Barabási-Abert; and the fitness model,
+    using the function `sample_fitness_pl`. For each of the mechanisms, a 
+    network with distribution of power 2 and another with power 3 were built, 
+    since Barabási also proposed that most scale-free networks follow a power 
+    law with exponent between 2 and 3, and because Broido and Clauset's 
+    strongest method to test for scale-freenness also looks for an exponent 
+    between 2 and 3.
+    
+  - In order to get comparable results, the networks will have the same number
+    of vertices and edges as the matches network. Since this approach causes the
+    built networks to slightly deviate from the pure model, we will also build
+    a separate networks built with parameters unrelated to the matches network.
+    Also, since it is expected that in the pure form the preferential attachment
+    and fitness models will have similar results, only the the preferential
+    attachment network will be built.
+    
+  - After the networks are built, the frequency of degrees is calculated, put in
+    bins and normalized for clarity of results, and plotted together in a normal
+    and log-log scale. Additionally, density plots were made for the matches,
+    random and scale-free networks, plotted individually for in-depth analysis.
+  
+After building the networks, we will plot the degree distributions together,
+both in normal and in the log-log scale, to assess the type of the matches
+network based on the similarity with the other artificially built networks.
+  
+Outcomes of the test:
+
+  - The degree distribution of the matches network is plotted together with the
+    degree distributions of the random and scale-free networks. From the normal
+    scale plot, we can observe that the matches and scale-free networks are very
+    skewed to the right, with most users having just a few matches, while a few
+    users have a lot of matches. This behavior is indicative of a scale-free
+    network, but as the article mentioned, this must be confirmed by a straight-
+    line in the log-log plot.
+    
+  - In a log-log plot, a scale-free network will have a straight line, while a 
+    random network will have a bell-shaped curve. Although we observe the bell
+    shape for the random network, the other networks do not have a straight 
+    line, not even the ones artificially built. This indicates that the matches
+    network is a mixed network, since the shape of its degree distribution is
+    between the bell-shape and the straight line. The other scale-free networks
+    have a similar shape to the matches network, but closer to being a straight-
+    line. The artificial networks didn't have a straight line in the log-log
+    plot, because as mentioned before, by building the networks to have the same
+    number of vertices and edges as the matches networks, we are causing them
+    to deviate from their pure form. We can check the pure form of the random
+    and scale free networks in the last plot.
+    
+  - In the log scaled density plot of degrees for the matches graph, the initial
+    behavior is similar to scale free networks with a lot of nodes with a 
+    low degree, and a few nodes with a very high degree. However, it also 
+    presents a similar behavior to random networks, with a curve that resembles
+    a normal distribution. It also does not have a very heavy tail. This 
+    suggests that while some nodes may have higher degree, the overall network
+    structure is less dominated by giant hubs than traditional scale free 
+    networks.
+    
+Because of these results, we could argue that the matches network can be 
+considered a mixed network.
+
+
+5.  *(Make-up question: You can skip any of the previous questions
+    and answer this question instead.)* Describe and perform any
+    additional analysis you want **using the any network originated from
+    the likes data.** You will be graded by the creativity and
+    correctness of the analysis, but also as a comparison to the best
+    answers provided by other students. The best answers will have full
+    points, while the other answers will be judged by comparison with
+    the best answers. `[2.5 points]`
+    
+```{r}
+#Aggregating likes per week and gender
+dt.likes.month.gender <- dt.merged[, .(likes = .N), by = .(week, sender_gender)]
+
+# Plot likes per month and gender
+ggplot(dt.likes.month.gender, aes(x = week, y = likes, color = sender_gender)) +
+  geom_line() + theme_minimal() +
+  labs(title = "Likes per Week by Gender",
+       x = "Week",
+       y = "Number of Likes",
+       color = "Gender") +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+```
+
+In this question, we aim to conduct a temporal analysis of the likes data table,
+focusing on the aggregated likes sent each week and the resulting temporal 
+patterns. Our objective is to uncover any discernible trends or fluctuations 
+over time within this dataset. Additionally, we will explore how these patterns 
+vary when the data is segmented by gender. 
+
+The dataset spans from mid-2013 to late-2017, showcasing an evolution in user 
+interaction dynamics. Initially, the app appears predominantly populated by 
+female members, with male participation increasing over time. Until mid-2016, 
+the data shows relatively uniform patterns, with similar numbers of likes sent 
+by both genders, and very little growth in the activity, as measured by number 
+of users. However, a notable surge in interactions happens around mid-2016.
+
+A observation in this time is the widening gap between likes sent by female and 
+male users post mid-2016, with male senders becoming predominant. Furthermore, 
+during periods of heightened activity the disparity in likes sent by gender 
+accentuates, with male users nearly and over doubling the engagement levels.
+
+The peak of app activity appears to be in the second half of 2016, notably in 
+the third quarter, with a subsequent decline beginning in the fourth quarter. 
+Additionally, a seasonal pattern emerges in the final two years, where activity 
+surges, particularly around June, before diminishing in the fourth quarter.
+
+In conclusion, this temporal analysis highlights the trajectory in user 
+engagement within the app, from its inception to the later stages. The observed 
+trends offer valuable insights into user behavior dynamics, and seasonal 
+fluctuations.
